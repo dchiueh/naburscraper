@@ -4,16 +4,21 @@
 from bs4 import BeautifulSoup
 import requests
 import csv
+import os
 
-outfile = open('WW_new.csv', 'w', newline='', encoding="utf-8")
+outfile = open('WW_multiplescrape.csv', 'w', newline='', encoding="utf-8")
 writer = csv.writer(outfile)
 writer.writerow(["URL", "Content Type", "Creation Date", "Username", "Title", "Content", "Group"]) #Heading
 
-infile = open('discussionpages.csv', 'r')
-reader = csv.reader(infile)
 
-for row in reader: # iterate over each link provided
-    source = requests.get(''.join(row)).text #Need to convert from list object to string with join method
+dirloc = r"C:\Users\sdoong\Documents\scraper\WW HTML" 
+
+#calling scandir() function
+for file in os.scandir(dirloc):
+
+    if (file.path.endswith(".html") and file.is_file()):
+        infile = open(file.path, 'r', encoding="utf-8")
+        source = infile.read()
 
     soup = BeautifulSoup(source, 'lxml')
 
@@ -32,16 +37,16 @@ for row in reader: # iterate over each link provided
     group = soup.find(attrs={"property": "article:section"})
     group = group.get('content')
 
-    writer.writerow([''.join(row), "Discussion", date, username, title, content, group])
+    writer.writerow(["", "Discussion", date, username, title, content, group])
 
     for comment in soup.find_all("li", class_="comments-comment"):
         date = comment.get("data-comment-created-date")
         #if(date): 
-           # date = date[:10]
+            # date = date[:10]
         print(date)
         username = comment.find_next("a", class_="avatar-frame")
         username = username.get('href')
-        username = username.removeprefix("/members/")
+        username = username.removeprefix("https://wenatcheeworld.ning.com/members/")
         content = str(comment.find_next("div", class_="comments-text entry-content"))
         content = content.removeprefix("<div class=\"comments-text entry-content\">")
         content = content.removesuffix("</div>")
